@@ -11,14 +11,14 @@ for (dayspec in 15:20){
     tryCatch({    
       no.hour.predict <- 3  
       sys.time <- strptime(paste0("2016-01-", dayspec, " ", hourspec, ":00:00 GMT"), "%Y-%m-%d %H:%M:%S GMT")
-      file.fd <- "/eng/mti/singapore/fab_7/predictive_maintenance/idl/IMMC__ALL/IMMC__ALL_Model_Input"
-      header.t2 <- "/eng/mti/singapore/fab_7/predictive_maintenance/pub_modeloutput/IMMC__ALL/pdm_model_output_col_header"
-      file.t2 <- "/eng/mti/singapore/fab_7/predictive_maintenance/pub_modeloutput/IMMC__ALL/pdm_model_output_prediction"
-      success.t <- "/eng/mti/singapore/fab_7/predictive_maintenance/pub_modeloutput/IMMC__ALL/successfactors"
+      file.fd <- ""
+      header.t2 <- ""
+      file.t2 <- ""
+      success.t <- ""
       source.path <- "."
-      #     source.path <- "/home/etldata/POC_cases/PROD_Version_SVN/FD_trace_point/scripts/model_scripts/IM_filament"
-      local.path <- "/home/hdfsf10w/PdM/IM_filament"
-      pm.path <- "/apps/hive/warehouse/user_mikenguyen.db/im_equip_hist_f10w"
+      #     source.path <- ""
+      local.path <- ""
+      pm.path <- ""
       
 #       args <- commandArgs(trailingOnly=T)
 #       no.hour.predict <- as.numeric(args[1])
@@ -161,14 +161,14 @@ for (dayspec in 15:20){
         time.name.1 <- substr(time.name.1, 1, nchar(time.name.1)-4)
         time.name.2 <- format(sys.time, "%Y-%m-%d %H:%M:%S GMT")
         time.name.2 <- substr(time.name.2, 1, nchar(time.name.2)-4)
-        hive.query.1 <- paste0("beeline -u \"jdbc:hive2://tshdpprod01-hive.wlsg.micron.com:10010/default;principal=hive/tslhdppname2.wlsg.micron.com@HADOOP.MICRON.COM?tez.queue.name=eng_f10w-04\" -e ",
+        hive.query.1 <- paste0("beeline -u \"jdbc:hive2://;principal=hive/?tez.queue.name=\" -e ",
                                "\"CREATE TABLE IF NOT EXISTS ", pm.table.des,
                                " (equip_id STRING, mfg_area_id STRING, semi_state_id STRING, equip_state_id STRING,
                                event_code_id STRING, equip_state_in_datetime TIMESTAMP, equip_state_out_datetime TIMESTAMP, 
                                event_hist_mod_dt TIMESTAMP, event_note_text STRING, hive_load_datetime_gmt TIMESTAMP, equip_state_out_year_month STRING)
                                ROW FORMAT DELIMITED FIELDS TERMINATED BY '\001'
                                \"")
-        hive.query.2 <- paste0("beeline -u \"jdbc:hive2://tshdpprod01-hive.wlsg.micron.com:10010/default;principal=hive/tslhdppname2.wlsg.micron.com@HADOOP.MICRON.COM?tez.queue.name=eng_f10w-03\" -e ",
+        hive.query.2 <- paste0("beeline -u \"jdbc:hive2://;principal=hive/?tez.queue.name=\" -e ",
                                "\"INSERT OVERWRITE TABLE ", pm.table.des, 
                                " SELECT equip_id, mfg_area_id, semi_state_id, equip_state_id, event_code_id, equip_state_in_datetime, equip_state_out_datetime, event_hist_mod_dt, event_note_text, hive_load_datetime_gmt, equip_state_out_year_month FROM ", pm.table,
                                " WHERE equip_id like 'IMMC%' AND equip_state_in_datetime > cast('", time.name.1, "' as timestamp) AND equip_state_in_datetime <= cast('", time.name.2, "' as timestamp)
@@ -187,11 +187,8 @@ for (dayspec in 15:20){
         df <- rbindlist(df.L1, use.names = T)
         hdfs.delete(pm.path)
       
-        df <- df[which(df$event_code_id %in% c("IN_PM", "PM_12_WEEK", "PM_24_WEEK", "PM_48_WEEK", "PM_FLOODGUN", "PM_MONTHLY", "PM_48_WEEK_P1",
-                                               "PM_48_WEEK_P2", "PM_48_WEEK_P3", "PM_48_WEEK_P4", "PM_BIWEEKLY", "PM_FLOODGUN", "PM_12_WEEK",
-                                               "PM_24_WEEK", "PM_48_WEEK", "PM_FLOODGUN", "PM_MONTHLY", "PM_48_WEEK_P1", "PM_48_WEEK_P2",
-                                               "PM_48_WEEK_P3", "PM_48_WEEK_P4", "PM_MONTHLY")
-                       | ((df$semi_state_id=="UNSCHEDULED_DOWNTIME") & (df$equip_state_id %in% c('WAIT_REPAIR', 'IN_REPAIR'))
+        df <- df[which(df$event_code_id %in% c("")
+                       | ((df$semi_state_id=="") & (df$equip_state_id %in% c('', ''))
                           )),]
         df$equip_state_in_datetime <- as.POSIXct(df$equip_state_in_datetime, format="%Y-%m-%d %H:%M:%S")
         
